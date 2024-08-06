@@ -65,6 +65,11 @@ public class UserController {
         return userService.removeFromShoppingCart(userId, productId);
     }
 
+    @GetMapping("/discount/{userId}")
+    public ResponseEntity getStudentDiscount(@PathVariable int userId) {
+        return userService.getStudentDiscount(userId);
+    }
+
     @PutMapping("/buy/{userId}/{merchantId}/{productId}")
     public ResponseEntity buyProduct(@PathVariable int userId,
                                              @PathVariable int productId,
