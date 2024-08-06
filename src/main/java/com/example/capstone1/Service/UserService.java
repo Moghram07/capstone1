@@ -1,4 +1,6 @@
+// UserService.java
 package com.example.capstone1.Service;
+
 import com.example.capstone1.Model.MerchantStock;
 import com.example.capstone1.Model.Product;
 import com.example.capstone1.Model.User;
@@ -25,9 +27,9 @@ public class UserService {
     }
 
     public boolean updateUser(int id, User user) {
-        for(int i = 0; i < users.size(); i++){
-            if(users.get(i).getUserId() == id){
-                users.set(i,user);
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getUserId() == id) {
+                users.set(i, user);
                 return true;
             }
         }
@@ -35,8 +37,8 @@ public class UserService {
     }
 
     public boolean deleteUser(int id) {
-        for(int i = 0; i < users.size(); i++){
-            if(users.get(i).getUserId() == id){
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getUserId() == id) {
                 users.remove(i);
                 return true;
             }
@@ -45,16 +47,15 @@ public class UserService {
     }
 
     public User getUserById(int id) {
-        for(int i = 0; i < users.size(); i++){
-            if(users.get(i).getUserId() == id){
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getUserId() == id) {
                 return users.get(i);
             }
         }
         return null;
     }
-    // new method add to shopping cart
-    public ResponseEntity addToShoppingCart(int userId, int productId) {
 
+    public ResponseEntity addToShoppingCart(int userId, int productId) {
         String cartMessage;
         // Check if user exists
         User user = getUserById(userId);
@@ -76,15 +77,18 @@ public class UserService {
             cartMessage = "Insufficient stock for productId " + productId;
             return ResponseEntity.status(400).body(cartMessage);
         }
+
         // add to user shopping cart
-            product.setAddToShoppingCart(true);
-            user.getShoppingCart().add(product);
-            updateUser(userId, user);
+        product.setAddToShoppingCart(true);
+        user.getShoppingCart().add(product);
+        updateUser(userId, user);
+
         // calculate the total amount of all products
         double total = 0;
         for (Product p : user.getShoppingCart()) {
             total += p.getPrice();
         }
+
         // print selected product
         StringBuilder cartDetails = new StringBuilder();
         for (Product p : user.getShoppingCart()) {
@@ -95,39 +99,6 @@ public class UserService {
         String responseMessage = "User id " + userId + " added to shopping cart:\n"
                 + cartDetails.toString() + "Total price: " + String.format("%.2f", total);
         return ResponseEntity.status(200).body(responseMessage);
-    }
-
-    // New method to remove from shopping cart
-    public ResponseEntity removeFromShoppingCart(int userId, int productId) {
-        String cartMessage;
-
-        // Check if user exists
-        User user = getUserById(userId);
-        if (user == null) {
-            cartMessage = "User with id " + userId + " not found";
-            return ResponseEntity.status(400).body(cartMessage);
-        }
-
-        // Check if product is in shopping cart
-        Product productToRemove = null;
-        for (Product product : user.getShoppingCart()) {
-            if (product.getProductId() == productId) {
-                productToRemove = product;
-                break;
-            }
-        }
-
-        if (productToRemove == null) {
-            cartMessage = "Product with id " + productId + " not found in shopping cart";
-            return ResponseEntity.status(400).body(cartMessage);
-        }
-
-        // Remove product from shopping cart
-        user.getShoppingCart().remove(productToRemove);
-        updateUser(userId, user);
-
-        cartMessage = "Product with id " + productId + " removed from shopping cart";
-        return ResponseEntity.status(200).body(cartMessage);
     }
 
     public ResponseEntity buyProduct(int userId, int productId, int merchantId) {
@@ -177,6 +148,62 @@ public class UserService {
         resultMessage = "Product purchased successfully";
         return ResponseEntity.status(200).body(resultMessage);
     }
+
+    // New method to remove from shopping cart
+    public ResponseEntity removeFromShoppingCart(int userId, int productId) {
+        String cartMessage;
+
+        // Check if user exists
+        User user = getUserById(userId);
+        if (user == null) {
+            cartMessage = "User with id " + userId + " not found";
+            return ResponseEntity.status(400).body(cartMessage);
+        }
+
+        // Check if product is in shopping cart
+        Product productToRemove = null;
+        for (Product product : user.getShoppingCart()) {
+            if (product.getProductId() == productId) {
+                productToRemove = product;
+                break;
+            }
+        }
+
+        if (productToRemove == null) {
+            cartMessage = "Product with id " + productId + " not found in shopping cart";
+            return ResponseEntity.status(400).body(cartMessage);
+        }
+
+        // Remove product from shopping cart
+        user.getShoppingCart().remove(productToRemove);
+        updateUser(userId, user);
+
+        cartMessage = "Product with id " + productId + " removed from shopping cart";
+        return ResponseEntity.status(200).body(cartMessage);
+    }
+
+    // New method to get student discount
+    public ResponseEntity getStudentDiscount(int userId) {
+        String discountMessage;
+
+        // Check if user exists
+        User user = getUserById(userId);
+        if (user == null) {
+            discountMessage = "User with id " + userId + " not found";
+            return ResponseEntity.status(400).body(discountMessage);
+        }
+
+        // Apply a discount of 10% for students
+        double discount = 0.1;
+        double total = 0;
+        for (Product product : user.getShoppingCart()) {
+            total += product.getPrice();
+        }
+
+        double discountedTotal = total - (total * discount);
+        discountMessage = "User id " + userId + " has a total price of " + String.format("%.2f", total)
+                + " with a student discount of 10%, the total is: " + String.format("%.2f", discountedTotal);
+
+        return ResponseEntity.status(200).body(discountMessage);
+    }
 }
-
-
