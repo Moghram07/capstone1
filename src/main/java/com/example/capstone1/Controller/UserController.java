@@ -57,24 +57,27 @@ public class UserController {
 
     @PutMapping("/cart/{userId}/{productId}")
     public ResponseEntity addToShoppingCart(@PathVariable int userId, @PathVariable int productId){
-        return userService.addToShoppingCart(userId, productId);
+        userService.addToShoppingCart(userId, productId);
+        return ResponseEntity.status(200).body("product added to shopping cart");
     }
 
     @DeleteMapping("/cart/delete/{userId}/{productId}")
     public ResponseEntity removeFromShoppingCart(@PathVariable int userId, @PathVariable int productId) {
-        return userService.removeFromShoppingCart(userId, productId);
+         userService.removeFromShoppingCart(userId, productId);
+         return ResponseEntity.status(200).body("product removed from shopping cart");
     }
 
     @GetMapping("/discount/{userId}")
     public ResponseEntity getStudentDiscount(@PathVariable int userId) {
-        return userService.getStudentDiscount(userId);
+         userService.getStudentDiscount(userId);
+         return ResponseEntity.status(200).body("student discount");
     }
 
     @PutMapping("/buy/{userId}/{merchantId}/{productId}")
     public ResponseEntity buyProduct(@PathVariable int userId,
                                              @PathVariable int productId,
                                              @PathVariable int merchantId) {
-        ResponseEntity response = userService.buyProduct(userId, productId, merchantId);
-        return response;
+        userService.buyProduct(userId, productId, merchantId);
+        return ResponseEntity.status(200).body("purchased product " + productId + " for user " + userId);
     }
 }
