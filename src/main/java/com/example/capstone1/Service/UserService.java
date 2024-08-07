@@ -1,11 +1,9 @@
-// UserService.java
 package com.example.capstone1.Service;
 
 import com.example.capstone1.Model.MerchantStock;
 import com.example.capstone1.Model.Product;
 import com.example.capstone1.Model.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -55,109 +53,93 @@ public class UserService {
         return null;
     }
 
-    public ResponseEntity addToShoppingCart(int userId, int productId) {
-        String cartMessage;
+    public String addToShoppingCart(int userId, int productId) {
         // Check if user exists
         User user = getUserById(userId);
         if (user == null) {
-            cartMessage = "User with id " + userId + " not found";
-            return ResponseEntity.status(400).body(cartMessage);
+            return "User with id " + userId + " not found";
         }
 
         // Check if product exists
         Product product = productService.getProductById(productId);
         if (product == null) {
-            cartMessage = "Product with id " + productId + " not found";
-            return ResponseEntity.status(400).body(cartMessage);
+            return "Product with id " + productId + " not found";
         }
 
         // Check if merchant stock exists and is sufficient
         MerchantStock merchantStock = merchantStockService.getMerchantStockByProductId(productId);
         if (merchantStock.getQuantity() <= 0) {
-            cartMessage = "Insufficient stock for productId " + productId;
-            return ResponseEntity.status(400).body(cartMessage);
+            return "Insufficient stock for productId " + productId;
         }
 
-        // add to user shopping cart
+        // Add to user shopping cart
         product.setAddToShoppingCart(true);
         user.getShoppingCart().add(product);
         updateUser(userId, user);
 
-        // calculate the total amount of all products
+        // Calculate the total amount of all products
         double total = 0;
         for (Product p : user.getShoppingCart()) {
             total += p.getPrice();
         }
 
-        // print selected product
+        // Print selected product
         StringBuilder cartDetails = new StringBuilder();
         for (Product p : user.getShoppingCart()) {
             cartDetails.append("Product ID: ").append(p.getProductId())
                     .append(", Product Name: ").append(p.getProductName())
                     .append(", Product Price: ").append(p.getPrice()).append("\n");
         }
-        String responseMessage = "User id " + userId + " added to shopping cart:\n"
-                + cartDetails.toString() + "Total price: " + String.format("%.2f", total);
-        return ResponseEntity.status(200).body(responseMessage);
+
+        return "User id " + userId + " added to shopping cart:\n" + cartDetails.toString() +
+                "Total price: " + String.format("%.2f", total);
     }
 
-    public ResponseEntity buyProduct(int userId, int productId, int merchantId) {
-        String resultMessage;
-
+    public String buyProduct(int userId, int productId, int merchantId) {
         // Check if user exists
         User user = getUserById(userId);
         if (user == null) {
-            resultMessage = "User with id " + userId + " not found";
-            return ResponseEntity.status(400).body(resultMessage);
+            return "User with id " + userId + " not found";
         }
 
         // Check if product exists
         Product product = productService.getProductById(productId);
         if (product == null) {
-            resultMessage = "Product with id " + productId + " not found";
-            return ResponseEntity.status(400).body(resultMessage);
+            return "Product with id " + productId + " not found";
         }
 
         // Check if merchant stock exists and is sufficient
         MerchantStock merchantStock = merchantStockService.getMerchantStockByIds(merchantId);
         if (merchantStock == null) {
-            resultMessage = "Merchant stock with merchantId " + merchantId + " and productId " + productId + " not found";
-            return ResponseEntity.status(400).body(resultMessage);
+            return "Merchant stock with merchantId " + merchantId + " and productId " + productId + " not found";
         }
 
         if (merchantStock.getQuantity() <= 0) {
-            resultMessage = "Insufficient stock for productId " + productId + " at merchantId " + merchantId;
-            return ResponseEntity.status(400).body(resultMessage);
+            return "Insufficient stock for productId " + productId + " at merchantId " + merchantId;
         }
 
         // Check if user has enough balance
         if (user.getBalance() < product.getPrice()) {
-            resultMessage = "Insufficient balance for userId " + userId;
-            return ResponseEntity.status(400).body(resultMessage);
+            return "Insufficient balance for userId " + userId;
         }
 
         // Reduce stock and update user balance
         if (!merchantStockService.reduceStock(merchantId, productId, 1)) {
-            resultMessage = "Failed to reduce stock for productId " + productId + " at merchantId " + merchantId;
-            return ResponseEntity.status(400).body(resultMessage);
+            return "Failed to reduce stock for productId " + productId + " at merchantId " + merchantId;
         }
 
         user.setBalance(user.getBalance() - product.getPrice());
         updateUser(userId, user);
 
-        resultMessage = "Product purchased successfully";
-        return ResponseEntity.status(200).body(resultMessage);
+        return "Product purchased successfully";
     }
 
     // New method to remove from shopping cart
-    public ResponseEntity removeFromShoppingCart(int userId, int productId) {
-        String cartMessage;
-
+    public String removeFromShoppingCart(int userId, int productId) {
         // Check if user exists
         User user = getUserById(userId);
         if (user == null) {
-            cartMessage = "User with id " + userId + " not found";
-            return ResponseEntity.status(400).body(cartMessage);
+            return "User with id " + userId + " not found";
         }
 
         // Check if product is in shopping cart
@@ -170,27 +152,22 @@ public class UserService {
         }
 
         if (productToRemove == null) {
-            cartMessage = "Product with id " + productId + " not found in shopping cart";
-            return ResponseEntity.status(400).body(cartMessage);
+            return "Product with id " + productId + " not found in shopping cart";
         }
 
         // Remove product from shopping cart
         user.getShoppingCart().remove(productToRemove);
         updateUser(userId, user);
 
-        cartMessage = "Product with id " + productId + " removed from shopping cart";
-        return ResponseEntity.status(200).body(cartMessage);
+        return "Product with id " + productId + " removed from shopping cart";
     }
 
     // New method to get student discount
-    public ResponseEntity getStudentDiscount(int userId) {
-        String discountMessage;
-
+    public String getStudentDiscount(int userId) {
         // Check if user exists
         User user = getUserById(userId);
         if (user == null) {
-            discountMessage = "User with id " + userId + " not found";
-            return ResponseEntity.status(400).body(discountMessage);
+            return "User with id " + userId + " not found";
         }
 
         // Apply a discount of 10% for students
@@ -201,9 +178,7 @@ public class UserService {
         }
 
         double discountedTotal = total - (total * discount);
-        discountMessage = "User id " + userId + " has a total price of " + String.format("%.2f", total)
+        return "User id " + userId + " has a total price of " + String.format("%.2f", total)
                 + " with a student discount of 10%, the total is: " + String.format("%.2f", discountedTotal);
-
-        return ResponseEntity.status(200).body(discountMessage);
     }
 }
